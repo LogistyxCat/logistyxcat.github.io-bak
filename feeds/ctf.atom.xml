@@ -73,7 +73,7 @@ We can attempt to run &lt;code&gt;psexec.py&lt;/code&gt; (Also Impacket) on the 
 &lt;p&gt;What we can do is access the &lt;strong&gt;&lt;code&gt;Users&lt;/code&gt;&lt;/strong&gt; share and read from the user's home directory and get the user flag in &lt;strong&gt;&lt;code&gt;Users\SVC_TGS\Desktop&lt;/code&gt;&lt;/strong&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="user-flag" src="/images/ctf/htb/active/user-flag.jpg" title="One down, one to go!"&gt;&lt;/p&gt;
 &lt;h2&gt;Getting Administrator&lt;/h2&gt;
-&lt;p&gt;Looking for more common methods of attacking AD, we have likely at some point run Impacket's &lt;code&gt;GetUserSPNs.py&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;While searching for methods to escalate out privileges, it's likely that we would run Impacket's &lt;code&gt;GetUserSPNs.py&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="GetUserSPNs" src="/images/ctf/htb/active/kerberoast-stage1.jpg" title="I think it's Sunday"&gt;&lt;/p&gt;
 &lt;p&gt;It appears that a CIFS service is running on the Administrator account.
 We may be able to perform a &lt;a href="https://attack.mitre.org/techniques/T1208/"&gt;Kerberoast&lt;/a&gt; attack on the service and gain access to the Administrator account.&lt;/p&gt;
@@ -84,9 +84,9 @@ Parts of the TGS we obtain will be encrypted with the password hash of the servi
 &lt;h2&gt;Sunday Dinner, aka How I Kerberoasted Your Domain and You're Gonna Like It&lt;/h2&gt;
 &lt;p&gt;To perform the attack from a non-domain joined computer, the easiest method is to use &lt;code&gt;GetUserSPNs.py&lt;/code&gt; to view any &lt;s&gt;beef roasts&lt;/s&gt; SPN's we fancy (repeat image for continuity purposes):&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Kerberoast-stage1" src="/images/ctf/htb/active/kerberoast-stage1.jpg" title="Ensure you get a good chuck of 'meat'"&gt;&lt;/p&gt;
-&lt;p&gt;If there are &lt;s&gt;roasts&lt;/s&gt; SPN's we like the looks of (such as that CIFS on Administrator), we simply add the &lt;code&gt;-request&lt;/code&gt; flag and &lt;s&gt;order&lt;/s&gt; execute again: &lt;/p&gt;
+&lt;p&gt;If there are SPN's we like the looks of (such as that CIFS on Administrator), we simply add the &lt;code&gt;-request&lt;/code&gt; flag and execute again: &lt;/p&gt;
 &lt;p&gt;&lt;img alt="Kerberoast-stage2" src="/images/ctf/htb/active/kerberoast-stage2.jpg" title="Prepare the dish for the 'oven'"&gt;&lt;/p&gt;
-&lt;p&gt;Finally, take your &lt;s&gt;roast&lt;/s&gt; silver ticket and place it into your &lt;s&gt;oven&lt;/s&gt; cracking program of choice.
+&lt;p&gt;Finally, take your silver ticket and throw it into your &lt;s&gt;oven&lt;/s&gt; cracking program of choice.
 I use hashcat.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Kerberoast-stage3" src="/images/ctf/htb/active/kerberoast-stage3.jpg" title="Leave for 1-10 seconds, depending on GPU"&gt;&lt;/p&gt;
 &lt;p&gt;Now that we have access to the Administrator account, we can use &lt;code&gt;psexec.py&lt;/code&gt; successfully to obtain a shell on the target system.&lt;/p&gt;

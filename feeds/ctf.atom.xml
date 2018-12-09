@@ -73,7 +73,7 @@ We can attempt to run &lt;code&gt;psexec.py&lt;/code&gt; (Also Impacket) on the 
 &lt;p&gt;What we can do is access the &lt;strong&gt;&lt;code&gt;Users&lt;/code&gt;&lt;/strong&gt; share and read from the user's home directory and get the user flag in &lt;strong&gt;&lt;code&gt;Users\SVC_TGS\Desktop&lt;/code&gt;&lt;/strong&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="user-flag" src="/images/ctf/htb/active/user-flag.jpg" title="One down, one to go!"&gt;&lt;/p&gt;
 &lt;h2&gt;Getting Administrator&lt;/h2&gt;
-&lt;p&gt;While searching for methods to escalate out privileges, it's likely that we would run Impacket's &lt;code&gt;GetUserSPNs.py&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;While searching for methods to escalate our privileges, it's likely that we would run Impacket's &lt;code&gt;GetUserSPNs.py&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="GetUserSPNs" src="/images/ctf/htb/active/kerberoast-stage1.jpg" title="I think it's Sunday"&gt;&lt;/p&gt;
 &lt;p&gt;It appears that a CIFS service is running on the Administrator account.
 We may be able to perform a &lt;a href="https://attack.mitre.org/techniques/T1208/"&gt;Kerberoast&lt;/a&gt; attack on the service and gain access to the Administrator account.&lt;/p&gt;

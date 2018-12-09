@@ -124,7 +124,7 @@ We can attempt to run <code>psexec.py</code> (Also Impacket) on the target to ge
 <p>What we can do is access the <strong><code>Users</code></strong> share and read from the user's home directory and get the user flag in <strong><code>Users\SVC_TGS\Desktop</code></strong>.</p>
 <p><img alt="user-flag" src="/images/ctf/htb/active/user-flag.jpg" title="One down, one to go!"></p>
 <h2>Getting Administrator</h2>
-<p>While searching for methods to escalate out privileges, it's likely that we would run Impacket's <code>GetUserSPNs.py</code>.</p>
+<p>While searching for methods to escalate our privileges, it's likely that we would run Impacket's <code>GetUserSPNs.py</code>.</p>
 <p><img alt="GetUserSPNs" src="/images/ctf/htb/active/kerberoast-stage1.jpg" title="I think it's Sunday"></p>
 <p>It appears that a CIFS service is running on the Administrator account.
 We may be able to perform a <a href="https://attack.mitre.org/techniques/T1208/">Kerberoast</a> attack on the service and gain access to the Administrator account.</p>

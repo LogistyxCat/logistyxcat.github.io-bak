@@ -1,5 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>LogistyxCat - ctf</title><link href="/" rel="alternate"></link><link href="feeds/ctf.atom.xml" rel="self"></link><id>/</id><updated>2018-12-04T00:00:00-08:00</updated><entry><title>HTB - Celestial</title><link href="htb-celestial.html" rel="alternate"></link><published>2018-12-04T00:00:00-08:00</published><updated>2018-12-04T00:00:00-08:00</updated><author><name>Riley</name></author><id>tag:None,2018-12-04:htb-celestial.html</id><summary type="html">&lt;p&gt;Guide to Celestial from Hack the Box&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Preamble&lt;/h2&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>LogistyxCat - ctf</title><link href="/" rel="alternate"></link><link href="feeds/ctf.atom.xml" rel="self"></link><id>/</id><updated>2018-12-08T00:00:00-08:00</updated><entry><title>HTB - Active</title><link href="htb-active.html" rel="alternate"></link><published>2018-12-08T00:00:00-08:00</published><updated>2018-12-08T00:00:00-08:00</updated><author><name>Riley</name></author><id>tag:None,2018-12-08:htb-active.html</id><summary type="html">&lt;p&gt;Guide to Active from Hack the Box&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Description&lt;/h2&gt;
+&lt;p&gt;Active is a Windows Server 2008 R2 Active Directory Domain Controller from Hack the Box.
+I thought is was pretty fun and had some good learning opportunities with it.&lt;/p&gt;
+&lt;h2&gt;Reconnaissance&lt;/h2&gt;
+&lt;p&gt;We start every engagement by identifying the target (in this case 10.10.10.100) and running a port scan against it.&lt;/p&gt;
+&lt;h4&gt;Nmap (curated to remove some extra Windows stuff)&lt;/h4&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# nmap -v -sC -sV -oA nmap/active 10.10.10.100&lt;/span&gt;
+
+PORT      STATE SERVICE       VERSION
+&lt;span class="m"&gt;53&lt;/span&gt;/tcp    open  domain        Microsoft DNS &lt;span class="m"&gt;6&lt;/span&gt;.1.7600 &lt;span class="o"&gt;(&lt;/span&gt;1DB04001&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;Windows Server &lt;span class="m"&gt;2008&lt;/span&gt; R2&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;|&lt;/span&gt; dns-nsid: 
+&lt;span class="p"&gt;|&lt;/span&gt;_  bind.version: Microsoft DNS &lt;span class="m"&gt;6&lt;/span&gt;.1.7600 &lt;span class="o"&gt;(&lt;/span&gt;1DB04001&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;span class="m"&gt;88&lt;/span&gt;/tcp    open  kerberos-sec  Microsoft Windows Kerberos &lt;span class="o"&gt;(&lt;/span&gt;server time: &lt;span class="m"&gt;2018&lt;/span&gt;-07-29 &lt;span class="m"&gt;17&lt;/span&gt;:35:32Z&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;span class="m"&gt;135&lt;/span&gt;/tcp   open  msrpc         Microsoft Windows RPC
+&lt;span class="m"&gt;139&lt;/span&gt;/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+&lt;span class="m"&gt;389&lt;/span&gt;/tcp   open  ldap          Microsoft Windows Active Directory LDAP &lt;span class="o"&gt;(&lt;/span&gt;Domain: active.htb, Site: Default-First-Site-Name&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;span class="m"&gt;445&lt;/span&gt;/tcp   open  microsoft-ds?
+&lt;span class="m"&gt;464&lt;/span&gt;/tcp   open  kpasswd5?
+&lt;span class="m"&gt;593&lt;/span&gt;/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP &lt;span class="m"&gt;1&lt;/span&gt;.0
+&lt;span class="m"&gt;636&lt;/span&gt;/tcp   open  tcpwrapped
+&lt;span class="m"&gt;3268&lt;/span&gt;/tcp  open  ldap          Microsoft Windows Active Directory LDAP &lt;span class="o"&gt;(&lt;/span&gt;Domain: active.htb, Site: Default-First-Site-Name&lt;span class="o"&gt;)&lt;/span&gt;
+
+Service Info: Host: DC&lt;span class="p"&gt;;&lt;/span&gt; OS: Windows&lt;span class="p"&gt;;&lt;/span&gt; CPE: cpe:/o:microsoft:windows_server_2008:r2, cpe:/o:microsoft:windows
+
+Host script results:
+&lt;span class="p"&gt;|&lt;/span&gt; nbstat: NetBIOS name: DC, NetBIOS user: &amp;lt;unknown&amp;gt;, NetBIOS MAC: &lt;span class="m"&gt;00&lt;/span&gt;:50:56:b9:11:3f &lt;span class="o"&gt;(&lt;/span&gt;VMware&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;|&lt;/span&gt; Names:
+&lt;span class="p"&gt;|&lt;/span&gt;   DC&amp;lt;&lt;span class="m"&gt;00&lt;/span&gt;&amp;gt;               Flags: &amp;lt;unique&amp;gt;&amp;lt;active&amp;gt;
+&lt;span class="p"&gt;|&lt;/span&gt;   ACTIVE&amp;lt;&lt;span class="m"&gt;00&lt;/span&gt;&amp;gt;           Flags: &amp;lt;group&amp;gt;&amp;lt;active&amp;gt;
+&lt;span class="p"&gt;|&lt;/span&gt;   ACTIVE&amp;lt;1c&amp;gt;           Flags: &amp;lt;group&amp;gt;&amp;lt;active&amp;gt;
+&lt;span class="p"&gt;|&lt;/span&gt;   DC&amp;lt;&lt;span class="m"&gt;20&lt;/span&gt;&amp;gt;               Flags: &amp;lt;unique&amp;gt;&amp;lt;active&amp;gt;
+&lt;span class="p"&gt;|&lt;/span&gt;_  ACTIVE&amp;lt;1b&amp;gt;           Flags: &amp;lt;unique&amp;gt;&amp;lt;active&amp;gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Active appears to be a Windows 2008 R2 Active Directory Domain Controller for the &lt;strong&gt;&lt;code&gt;ACTIVE.HTB&lt;/code&gt;&lt;/strong&gt; domain.
+Since this is a Windows computer, we should see if any shares are available to us from a null session.&lt;/p&gt;
+&lt;h2&gt;Getting User&lt;/h2&gt;
+&lt;h4&gt;SMBMap&lt;/h4&gt;
+&lt;p&gt;&lt;img alt="smbmap-shares" src="/images/ctf/htb/active/smbmap-shares.jpg" title="Running smbmap to enumerate shares"&gt;&lt;/p&gt;
+&lt;p&gt;Active does allow null sessions to connect to the Replication share.
+Enumerating further:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="smbmap-groups" src="/images/ctf/htb/active/smbmap-groups.jpg" title="Enumerating the files in Replication"&gt;&lt;/p&gt;
+&lt;p&gt;According to &lt;a href="https://adsecurity.org/?p=2288"&gt;adsecurity&lt;/a&gt;, Groups.xml is a file that is distributed via Group Policy that can (among other things) create local users, set scheduled tasks, and change the local Administrator password.
+It may have very useful information.&lt;/p&gt;
+&lt;p&gt;It is possible to download the file using smbmap by setting the &lt;code&gt;--download&lt;/code&gt; flag followed by the full path to the file, in this case &lt;strong&gt;&lt;code&gt;Replication\active.htb\Policies\{31B2F340-016D-11D2-945F-00C04FB984F9}\MACHINE\Preferences\Groups\Groups.xml&lt;/code&gt;&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;After downloading the file, we can view the contents (which I have formatted for easy reading):&lt;/p&gt;
+&lt;h4&gt;Groups.xml&lt;/h4&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;utf-8&amp;quot;?&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;Groups&lt;/span&gt; &lt;span class="na"&gt;clsid=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;{3125E937-EB16-4b4c-9934-544FC6D24D26}&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;User&lt;/span&gt; &lt;span class="na"&gt;clsid=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;{DF5F1855-51E5-4d24-8B1A-D9BDE98BA1D1}&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;active.htb\SVC_TGS&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;image=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;2&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;changed=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;2018-07-18 20:46:06&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;uid=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;{EF57DA28-5F69-4530-A59E-AAB58578219D}&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;Properties&lt;/span&gt; &lt;span class="na"&gt;action=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;U&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;newName=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;fullName=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;description=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;cpassword=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;edBSHOwhZLTjt/QS9FeIcJ83mjWA98gw9guKOhJOdcqh+ZGMeXOsQbCpZ3xUjTLfCuNH8pG5aSVYdYw/NglVmQ&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;changeLogon=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;0&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;noChange=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;1&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;neverExpires=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;1&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;acctDisabled=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;0&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;userName=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;active.htb\SVC_TGS&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/User&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/Groups&amp;gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Based on the &lt;strong&gt;&lt;code&gt;Groups&lt;/code&gt;&lt;/strong&gt; and &lt;strong&gt;&lt;code&gt;User&lt;/code&gt;&lt;/strong&gt; tags, this is modifying or distributing an account named &lt;strong&gt;active.htb\SVC_TGS&lt;/strong&gt;, which is clearly a domain joined user.
+Under &lt;strong&gt;&lt;code&gt;Properties&lt;/code&gt;&lt;/strong&gt;, the &lt;strong&gt;&lt;code&gt;cpassword&lt;/code&gt;&lt;/strong&gt; tag holds a password encrypted by an AES-256 private key.&lt;/p&gt;
+&lt;p&gt;This would be a problem, if &lt;a href="https://msdn.microsoft.com/en-us/library/2c15cbf0-f086-4c74-8b70-1f2fa45dd4be.aspx"&gt;Microsoft hadn't released the 32-byte key&lt;/a&gt; sometime before 2012.&lt;/p&gt;
+&lt;p&gt;Kali comes with the &lt;code&gt;gpp-decrypt&lt;/code&gt; utility, which is built specifically for this task.
+Running it on the encrypted password reveals the user account's password in plaintext.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="gpp-decrypt" src="/images/ctf/htb/active/gpp-decrypt.jpg" title="This is why we do the hash"&gt;&lt;/p&gt;
+&lt;p&gt;So the password for SVC_TGS is &lt;strong&gt;GPPStillStandingStrong2k18&lt;/strong&gt;.
+To test the credentials, we can run any utility that authenticates against AD, such as Impacket's &lt;code&gt;GetADUsers.py&lt;/code&gt; script.&lt;/p&gt;
+&lt;h4&gt;GetADUsers.py&lt;/h4&gt;
+&lt;p&gt;&lt;img alt="GetADUsers" src="/images/ctf/htb/active/GetADUsers.jpg" title="The normal stuff, mostly"&gt;&lt;/p&gt;
+&lt;p&gt;The credentials we have are valid, and Administrator appears to be the only account to target at the moment.
+We can attempt to run &lt;code&gt;psexec.py&lt;/code&gt; (Also Impacket) on the target to get a shell, but the account doesn't seem to have write access to any shares.&lt;/p&gt;
+&lt;h4&gt;psexec.py (no shell)&lt;/h4&gt;
+&lt;p&gt;&lt;img alt="psexec-user" src="/images/ctf/htb/active/psexec-user.jpg" title="No shell just yet"&gt;&lt;/p&gt;
+&lt;p&gt;What we can do is access the &lt;strong&gt;&lt;code&gt;Users&lt;/code&gt;&lt;/strong&gt; share and read from the user's home directory and get the user flag in &lt;strong&gt;&lt;code&gt;Users\SVC_TGS\Desktop&lt;/code&gt;&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="user-flag" src="/images/ctf/htb/active/user-flag.jpg" title="One down, one to go!"&gt;&lt;/p&gt;
+&lt;h2&gt;Getting Administrator&lt;/h2&gt;
+&lt;p&gt;Looking for more common methods of attacking AD, we have likely at some point run Impacket's &lt;code&gt;GetUserSPNs.py&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="GetUserSPNs" src="/images/ctf/htb/active/kerberoast-stage1.jpg" title="I think it's Sunday"&gt;&lt;/p&gt;
+&lt;p&gt;It appears that a CIFS service is running on the Administrator account.
+We may be able to perform a &lt;a href="https://attack.mitre.org/techniques/T1208/"&gt;Kerberoast&lt;/a&gt; attack on the service and gain access to the Administrator account.&lt;/p&gt;
+&lt;p&gt;There are plenty of excellent guides on what Kerberoasting is and how it works, so I will &lt;a href="https://files.sans.org/summit/hackfest2014/PDFs/Kicking%20the%20Guard%20Dog%20of%20Hades%20-%20Attacking%20Microsoft%20Kerberos%20%20-%20Tim%20Medin(1).pdf"&gt;provide&lt;/a&gt; &lt;a href="https://www.harmj0y.net/blog/powershell/kerberoasting-without-mimikatz/"&gt;some&lt;/a&gt; &lt;a href="https://pentestlab.blog/2018/06/12/kerberoast/"&gt;resources&lt;/a&gt; and keep my own explanation brief.&lt;/p&gt;
+&lt;p&gt;Since the Administrator account is running a service (CIFS) on the machine, it has a SPN set on the account.
+Since we possess the ability to obtain a valid Kerberos TGT ticket, we may request a Kerberos TGS service ticket for any SPN from any domain controller we can authenticate to.
+Parts of the TGS we obtain will be encrypted with the password hash of the service account (in this case Administrator), meaning that we can brute force the credentials offline without ever knowing the actual password hash of the account.&lt;/p&gt;
+&lt;h2&gt;Sunday Dinner, aka How I Kerberoasted Your Domain and You're Gonna Like It&lt;/h2&gt;
+&lt;p&gt;To perform the attack from a non-domain joined computer, the easiest method is to use &lt;code&gt;GetUserSPNs.py&lt;/code&gt; to view any &lt;s&gt;beef roasts&lt;/s&gt; SPN's we fancy (repeat image for continuity purposes):&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Kerberoast-stage1" src="/images/ctf/htb/active/kerberoast-stage1.jpg" title="Ensure you get a good chuck of 'meat'"&gt;&lt;/p&gt;
+&lt;p&gt;If there are &lt;s&gt;roasts&lt;/s&gt; SPN's we like the looks of (such as that CIFS on Administrator), we simply add the &lt;code&gt;-request&lt;/code&gt; flag and &lt;s&gt;order&lt;/s&gt; execute again: &lt;/p&gt;
+&lt;p&gt;&lt;img alt="Kerberoast-stage2" src="/images/ctf/htb/active/kerberoast-stage2.jpg" title="Prepare the dish for the 'oven'"&gt;&lt;/p&gt;
+&lt;p&gt;Finally, take your &lt;s&gt;roast&lt;/s&gt; silver ticket and place it into your &lt;s&gt;oven&lt;/s&gt; cracking program of choice.
+I use hashcat.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Kerberoast-stage3" src="/images/ctf/htb/active/kerberoast-stage3.jpg" title="Leave for 1-10 seconds, depending on GPU"&gt;&lt;/p&gt;
+&lt;p&gt;Now that we have access to the Administrator account, we can use &lt;code&gt;psexec.py&lt;/code&gt; successfully to obtain a shell on the target system.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="roasted" src="/images/ctf/htb/active/roasted.jpg" title="Roasted to system, no less"&gt;&lt;/p&gt;
+&lt;p&gt;This concludes the guide of Active from Hack the Box.&lt;/p&gt;</content><category term="ctf"></category><category term="hack the box"></category></entry><entry><title>HTB - Celestial</title><link href="htb-celestial.html" rel="alternate"></link><published>2018-12-04T00:00:00-08:00</published><updated>2018-12-04T00:00:00-08:00</updated><author><name>Riley</name></author><id>tag:None,2018-12-04:htb-celestial.html</id><summary type="html">&lt;p&gt;Guide to Celestial from Hack the Box&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Preamble&lt;/h2&gt;
 &lt;p&gt;The original writeup I did for this was some time ago.
 My methodology then didn't include nearly as many images, and the box has been retired since August 2018.
 If I had the option to redo this with better notes and images to create a better product here, I absolutley would.&lt;/p&gt;

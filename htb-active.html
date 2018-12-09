@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LogistyxCat, Learning one step at a time.">
+
+        <link rel="alternate"  href="/feeds/all.atom.xml" type="application/atom+xml" title="LogistyxCat Full Atom Feed"/>
+
+        <title>HTB - Active // LogistyxCat // Learning one step at a time.</title>
+
+
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/pure/0.3.0/pure-min.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.1.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="./theme/css/pure.css">
+    <link rel="stylesheet" href="./theme/css/pygments.css">
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/fitvids/1.0.1/jquery.fitvids.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            $(".content").fitVids();
+        });
+    </script>
+</head>
+
+<body>
+<div class="pure-g-r" id="layout">
+    <div class="sidebar sidebar-article pure-u">
+        <header class="header-article">
+            <hgroup>
+                <a href="./author/riley.html" title="See posts by Riley">
+                </a>
+                <h2 class="article-info">Riley</h2>
+                <small class="about-author"></small>
+                <h5>Published</h5>
+                <p>Sat 08 December 2018</p>
+                <a href="/">&larr;Home</a>
+            </hgroup>
+        </header>
+    </div>
+    <div class="pure-u">
+        <div class="content">
+            <section class="post">
+                <header class="post-header">
+                    <h1>HTB - Active</h1>
+                        <p class="post-meta">
+                            // under                                 <a class="post-category" href="./tag/ctf.html">ctf</a>
+                                <a class="post-category" href="./tag/hack-the-box.html">hack the box</a>
+                        </p>
+                </header>
+            </section>
+            <h2>Description</h2>
+<p>Active is a Windows Server 2008 R2 Active Directory Domain Controller from Hack the Box.
+I thought is was pretty fun and had some good learning opportunities with it.</p>
+<h2>Reconnaissance</h2>
+<p>We start every engagement by identifying the target (in this case 10.10.10.100) and running a port scan against it.</p>
+<h4>Nmap (curated to remove some extra Windows stuff)</h4>
+<div class="highlight"><pre><span></span><span class="c1"># nmap -v -sC -sV -oA nmap/active 10.10.10.100</span>
+
+PORT      STATE SERVICE       VERSION
+<span class="m">53</span>/tcp    open  domain        Microsoft DNS <span class="m">6</span>.1.7600 <span class="o">(</span>1DB04001<span class="o">)</span> <span class="o">(</span>Windows Server <span class="m">2008</span> R2<span class="o">)</span>
+<span class="p">|</span> dns-nsid: 
+<span class="p">|</span>_  bind.version: Microsoft DNS <span class="m">6</span>.1.7600 <span class="o">(</span>1DB04001<span class="o">)</span>
+<span class="m">88</span>/tcp    open  kerberos-sec  Microsoft Windows Kerberos <span class="o">(</span>server time: <span class="m">2018</span>-07-29 <span class="m">17</span>:35:32Z<span class="o">)</span>
+<span class="m">135</span>/tcp   open  msrpc         Microsoft Windows RPC
+<span class="m">139</span>/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+<span class="m">389</span>/tcp   open  ldap          Microsoft Windows Active Directory LDAP <span class="o">(</span>Domain: active.htb, Site: Default-First-Site-Name<span class="o">)</span>
+<span class="m">445</span>/tcp   open  microsoft-ds?
+<span class="m">464</span>/tcp   open  kpasswd5?
+<span class="m">593</span>/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP <span class="m">1</span>.0
+<span class="m">636</span>/tcp   open  tcpwrapped
+<span class="m">3268</span>/tcp  open  ldap          Microsoft Windows Active Directory LDAP <span class="o">(</span>Domain: active.htb, Site: Default-First-Site-Name<span class="o">)</span>
+
+Service Info: Host: DC<span class="p">;</span> OS: Windows<span class="p">;</span> CPE: cpe:/o:microsoft:windows_server_2008:r2, cpe:/o:microsoft:windows
+
+Host script results:
+<span class="p">|</span> nbstat: NetBIOS name: DC, NetBIOS user: &lt;unknown&gt;, NetBIOS MAC: <span class="m">00</span>:50:56:b9:11:3f <span class="o">(</span>VMware<span class="o">)</span>
+<span class="p">|</span> Names:
+<span class="p">|</span>   DC&lt;<span class="m">00</span>&gt;               Flags: &lt;unique&gt;&lt;active&gt;
+<span class="p">|</span>   ACTIVE&lt;<span class="m">00</span>&gt;           Flags: &lt;group&gt;&lt;active&gt;
+<span class="p">|</span>   ACTIVE&lt;1c&gt;           Flags: &lt;group&gt;&lt;active&gt;
+<span class="p">|</span>   DC&lt;<span class="m">20</span>&gt;               Flags: &lt;unique&gt;&lt;active&gt;
+<span class="p">|</span>_  ACTIVE&lt;1b&gt;           Flags: &lt;unique&gt;&lt;active&gt;
+</pre></div>
+
+
+<p>Active appears to be a Windows 2008 R2 Active Directory Domain Controller for the <strong><code>ACTIVE.HTB</code></strong> domain.
+Since this is a Windows computer, we should see if any shares are available to us from a null session.</p>
+<h2>Getting User</h2>
+<h4>SMBMap</h4>
+<p><img alt="smbmap-shares" src="/images/ctf/htb/active/smbmap-shares.jpg" title="Running smbmap to enumerate shares"></p>
+<p>Active does allow null sessions to connect to the Replication share.
+Enumerating further:</p>
+<p><img alt="smbmap-groups" src="/images/ctf/htb/active/smbmap-groups.jpg" title="Enumerating the files in Replication"></p>
+<p>According to <a href="https://adsecurity.org/?p=2288">adsecurity</a>, Groups.xml is a file that is distributed via Group Policy that can (among other things) create local users, set scheduled tasks, and change the local Administrator password.
+It may have very useful information.</p>
+<p>It is possible to download the file using smbmap by setting the <code>--download</code> flag followed by the full path to the file, in this case <strong><code>Replication\active.htb\Policies\{31B2F340-016D-11D2-945F-00C04FB984F9}\MACHINE\Preferences\Groups\Groups.xml</code></strong>.</p>
+<p>After downloading the file, we can view the contents (which I have formatted for easy reading):</p>
+<h4>Groups.xml</h4>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
+<span class="nt">&lt;Groups</span> <span class="na">clsid=</span><span class="s">&quot;{3125E937-EB16-4b4c-9934-544FC6D24D26}&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;User</span> <span class="na">clsid=</span><span class="s">&quot;{DF5F1855-51E5-4d24-8B1A-D9BDE98BA1D1}&quot;</span> <span class="na">name=</span><span class="s">&quot;active.htb\SVC_TGS&quot;</span> <span class="na">image=</span><span class="s">&quot;2&quot;</span> <span class="na">changed=</span><span class="s">&quot;2018-07-18 20:46:06&quot;</span> <span class="na">uid=</span><span class="s">&quot;{EF57DA28-5F69-4530-A59E-AAB58578219D}&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;Properties</span> <span class="na">action=</span><span class="s">&quot;U&quot;</span> <span class="na">newName=</span><span class="s">&quot;&quot;</span> <span class="na">fullName=</span><span class="s">&quot;&quot;</span> <span class="na">description=</span><span class="s">&quot;&quot;</span> <span class="na">cpassword=</span><span class="s">&quot;edBSHOwhZLTjt/QS9FeIcJ83mjWA98gw9guKOhJOdcqh+ZGMeXOsQbCpZ3xUjTLfCuNH8pG5aSVYdYw/NglVmQ&quot;</span> <span class="na">changeLogon=</span><span class="s">&quot;0&quot;</span> <span class="na">noChange=</span><span class="s">&quot;1&quot;</span> <span class="na">neverExpires=</span><span class="s">&quot;1&quot;</span> <span class="na">acctDisabled=</span><span class="s">&quot;0&quot;</span> <span class="na">userName=</span><span class="s">&quot;active.htb\SVC_TGS&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/User&gt;</span>
+<span class="nt">&lt;/Groups&gt;</span>
+</pre></div>
+
+
+<p>Based on the <strong><code>Groups</code></strong> and <strong><code>User</code></strong> tags, this is modifying or distributing an account named <strong>active.htb\SVC_TGS</strong>, which is clearly a domain joined user.
+Under <strong><code>Properties</code></strong>, the <strong><code>cpassword</code></strong> tag holds a password encrypted by an AES-256 private key.</p>
+<p>This would be a problem, if <a href="https://msdn.microsoft.com/en-us/library/2c15cbf0-f086-4c74-8b70-1f2fa45dd4be.aspx">Microsoft hadn't released the 32-byte key</a> sometime before 2012.</p>
+<p>Kali comes with the <code>gpp-decrypt</code> utility, which is built specifically for this task.
+Running it on the encrypted password reveals the user account's password in plaintext.</p>
+<p><img alt="gpp-decrypt" src="/images/ctf/htb/active/gpp-decrypt.jpg" title="This is why we do the hash"></p>
+<p>So the password for SVC_TGS is <strong>GPPStillStandingStrong2k18</strong>.
+To test the credentials, we can run any utility that authenticates against AD, such as Impacket's <code>GetADUsers.py</code> script.</p>
+<h4>GetADUsers.py</h4>
+<p><img alt="GetADUsers" src="/images/ctf/htb/active/GetADUsers.jpg" title="The normal stuff, mostly"></p>
+<p>The credentials we have are valid, and Administrator appears to be the only account to target at the moment.
+We can attempt to run <code>psexec.py</code> (Also Impacket) on the target to get a shell, but the account doesn't seem to have write access to any shares.</p>
+<h4>psexec.py (no shell)</h4>
+<p><img alt="psexec-user" src="/images/ctf/htb/active/psexec-user.jpg" title="No shell just yet"></p>
+<p>What we can do is access the <strong><code>Users</code></strong> share and read from the user's home directory and get the user flag in <strong><code>Users\SVC_TGS\Desktop</code></strong>.</p>
+<p><img alt="user-flag" src="/images/ctf/htb/active/user-flag.jpg" title="One down, one to go!"></p>
+<h2>Getting Administrator</h2>
+<p>Looking for more common methods of attacking AD, we have likely at some point run Impacket's <code>GetUserSPNs.py</code>.</p>
+<p><img alt="GetUserSPNs" src="/images/ctf/htb/active/kerberoast-stage1.jpg" title="I think it's Sunday"></p>
+<p>It appears that a CIFS service is running on the Administrator account.
+We may be able to perform a <a href="https://attack.mitre.org/techniques/T1208/">Kerberoast</a> attack on the service and gain access to the Administrator account.</p>
+<p>There are plenty of excellent guides on what Kerberoasting is and how it works, so I will <a href="https://files.sans.org/summit/hackfest2014/PDFs/Kicking%20the%20Guard%20Dog%20of%20Hades%20-%20Attacking%20Microsoft%20Kerberos%20%20-%20Tim%20Medin(1).pdf">provide</a> <a href="https://www.harmj0y.net/blog/powershell/kerberoasting-without-mimikatz/">some</a> <a href="https://pentestlab.blog/2018/06/12/kerberoast/">resources</a> and keep my own explanation brief.</p>
+<p>Since the Administrator account is running a service (CIFS) on the machine, it has a SPN set on the account.
+Since we possess the ability to obtain a valid Kerberos TGT ticket, we may request a Kerberos TGS service ticket for any SPN from any domain controller we can authenticate to.
+Parts of the TGS we obtain will be encrypted with the password hash of the service account (in this case Administrator), meaning that we can brute force the credentials offline without ever knowing the actual password hash of the account.</p>
+<h2>Sunday Dinner, aka How I Kerberoasted Your Domain and You're Gonna Like It</h2>
+<p>To perform the attack from a non-domain joined computer, the easiest method is to use <code>GetUserSPNs.py</code> to view any <s>beef roasts</s> SPN's we fancy (repeat image for continuity purposes):</p>
+<p><img alt="Kerberoast-stage1" src="/images/ctf/htb/active/kerberoast-stage1.jpg" title="Ensure you get a good chuck of 'meat'"></p>
+<p>If there are <s>roasts</s> SPN's we like the looks of (such as that CIFS on Administrator), we simply add the <code>-request</code> flag and <s>order</s> execute again: </p>
+<p><img alt="Kerberoast-stage2" src="/images/ctf/htb/active/kerberoast-stage2.jpg" title="Prepare the dish for the 'oven'"></p>
+<p>Finally, take your <s>roast</s> silver ticket and place it into your <s>oven</s> cracking program of choice.
+I use hashcat.</p>
+<p><img alt="Kerberoast-stage3" src="/images/ctf/htb/active/kerberoast-stage3.jpg" title="Leave for 1-10 seconds, depending on GPU"></p>
+<p>Now that we have access to the Administrator account, we can use <code>psexec.py</code> successfully to obtain a shell on the target system.</p>
+<p><img alt="roasted" src="/images/ctf/htb/active/roasted.jpg" title="Roasted to system, no less"></p>
+<p>This concludes the guide of Active from Hack the Box.</p>
+            <div class="hr"></div>
+            <a href="#" class="go-top">Go Top</a>
+<footer class="footer">
+    <p>&copy; LogistyxCat &ndash;
+        Built with <a href="https://github.com/PurePelicanTheme/pure">Pure Theme</a>
+        for <a href="http://blog.getpelican.com/">Pelican</a>
+    </p>
+</footer>        </div>
+    </div>
+</div>
+    <script>
+        var $top = $('.go-top');
+
+        // Show or hide the sticky footer button
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 200) {
+                $top.fadeIn(200);
+            } else {
+                $top.fadeOut(200);
+            }
+        });
+
+        // Animate the scroll to top
+        $top.click(function(event) {
+            event.preventDefault();
+            $('html, body').animate({scrollTop: 0}, 300);
+        })
+
+        // Makes sure that the href="#" attached to the <a> elements
+        // don't scroll you back up the page.
+        $('body').on('click', 'a[href="#"]', function(event) {
+            event.preventDefault();
+        });
+    </script>
+</body>
+</html>
